@@ -1,0 +1,39 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+    deploy:
+        working_directory: ~/project
+        docker:
+            - image: circleci/python:2.7-jessie
+        steps:
+            - checkout
+            # Install AWS cli
+            - run:
+                name: Install awscli
+                command: |
+                        mkdir -p ~/.aws
+                        echo "[profile eb-cli]
+                        region = ap-southeast-1
+                        aws_access_key_id = $AWS_ACCESS_KEY_ID
+                        aws_secret_access_key = $AWS_SECRET_ACCESS_KEY" > ~/.aws/config
+                        sudo pip install awscli
+                        sudo pip install awsebcli
+            - run:
+                name: Deploy on AWS EB
+                command: |
+                        eb use HappyinnProd-env-2
+                        eb deploy --timeout 30
+
+workflows:
+    version: 2
+    # The build and deploy workflow
+    deploy:
+        jobs:
+            - deploy:
+                filters:
+                    branches:
+                        only:
+                            - master
